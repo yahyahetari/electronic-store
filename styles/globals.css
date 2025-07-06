@@ -1,0 +1,233 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="number"],
+input[type="text"] {
+  unicode-bidi: plaintext;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  border: 1px soli;
+}
+
+label {
+  @apply block text-xl font-normal text-gray-800 justify-start ;
+  font-family:Georgia, 'Times New Roman', Times, serif;
+
+}
+body{
+  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  direction: rtl;
+}
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bg-darkes{
+  background: #1d1d1d;
+}
+
+.bg{
+  background: #d6d6d6;
+}
+
+.icon-white path {
+  fill: white;
+}
+
+.btn-red {
+  @apply text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg  px-4 py-2;
+}
+
+.btn-default {
+  @apply text-gray-900 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg  px-4 py-2 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-500;
+}
+@keyframes loader-animation {
+  0% {
+      transform: rotate(180deg) translateY(0);
+  }
+  50% {
+      transform: rotate(180deg) translateY(-10px);
+  }
+  100% {
+      transform: rotate(180deg) translateY(0);
+  }
+}
+@keyframes loader-animation {
+  0%, 100% { transform: rotate(180deg) translateY(0); }
+  25% { transform: rotate(180deg) translateY(-5px); }
+  50% { transform: rotate(180deg) translateY(-10px); }
+  75% { transform: rotate(180deg) translateY(-5px); }
+}
+.search-results {
+  background-color: #f0f4f8;
+}
+
+.text-gradient {
+  background: linear-gradient(45deg, #3490dc, #6574cd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-primary {
+  background-color: #3490dc;
+}
+
+.bg-primary-dark {
+  background-color: #2779bd;
+}
+
+.bg-secondary {
+  background-color: #6574cd;
+}
+
+.bg-accent {
+  background-color: #f6ad55;
+}
+
+.bg-accent-dark {
+  background-color: #ed8936;
+}
+
+input[type="checkbox"], input[type="radio"] {
+  accent-color: #f6ad55;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes marquee {
+    0% { transform: translateX(-100%); } /* البداية من خارج الشاشة من اليسار */
+    100% { transform: translateX(100%); } /* النهاية خارج الشاشة من اليمين */
+}
+
+.animate-marquee {
+    display: inline-block; /* عرض النص كمحتوى داخلي */
+    white-space: nowrap; /* منع التفاف النص */
+    overflow: hidden; /* منع ظهور أي جزء من النص خارج الحاوية */
+    animation: marquee 10s linear infinite; /* تطبيق الحركة */
+}
+
+
+
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e7e7e7;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  height: 50px;
+  width: 200px;
+  margin: 0 auto;
+}
+
+.card::before, .card::after {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  width: 50%;
+  height: 100%;
+  transition: 0.25s linear;
+  z-index: 1;
+}
+
+.card::before {
+  content: "";
+  left: 0;
+  justify-content: flex-end;
+  background-color: #14141496;
+}
+
+.card::after {
+  content: "";
+  right: 0;
+  justify-content: flex-start;
+  background-color: #1f1f1fa9;
+}
+
+.card:hover {
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.card:hover span {
+  opacity: 0;
+  z-index: -3;
+}
+
+.card:hover::before {
+  opacity: 0.5;
+  transform: translateY(-100%);
+}
+
+.card:hover::after {
+  opacity: 0.5;
+  transform: translateY(100%);
+}
+
+.card span {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: whitesmoke;
+  font-family: 'Fira Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  opacity: 1;
+  transition: opacity 0.25s;
+  z-index: 2;
+}
+
+.card .social-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25%;
+  height: 100%;
+  color: whitesmoke;
+  font-size: 24px;
+  text-decoration: none;
+  transition: 0.25s;
+}
+
+.card .social-link svg {
+  text-shadow: 1px 1px rgba(31, 74, 121, 0.7);
+  transform: scale(1);
+  width: 25px;
+  height: 25px;
+}
+
+.card .social-link:hover {
+  animation: bounce_613 0.4s linear;
+}
+
+@keyframes bounce_613 {
+  40% {
+    transform: scale(1.4);
+  }
+
+  60% {
+    transform: scale(0.8);
+  }
+
+  80% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
