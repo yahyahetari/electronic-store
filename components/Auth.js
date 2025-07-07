@@ -133,7 +133,7 @@ export default function Auth({ onClose }) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-bg-img bg-cover h-screen bg-glass overflow-y-hidden">
         <div className="w-full max-w-[600px] mx-auto my-5">
-          <div className="bg-[#464646] p-10 rounded-2xl shadow-[0_4px_10px_4px_rgba(19,35,47,3)]">
+          <div className="bg-[#f1f1f1] p-10 rounded-2xl shadow-[0_4px_10px_4px_rgba(19,35,47,3)]">
             {showVerification ? (
               <VerificationForm onVerify={handleVerify} correctCode={verificationCode} />
             ) : (
@@ -145,8 +145,8 @@ export default function Auth({ onClose }) {
                       onClick={(e) => handleTabClick(e, 'signup')}
                       className={`block py-2.5 px-2.5 text-center text-xl cursor-pointer transition-all duration-500 ease-in-out rounded-2xl ${
                         activeTab === 'signup'
-                          ? 'bg-[#01939c] text-white'
-                          : 'bg-[rgba(160,179,176,0.25)] text-[#a0b3b0] hover:bg-h-glass hover:text-white'
+                          ? 'bg-[#000000] text-white'
+                          : 'bg-[rgba(0,0,0,0.74)] text-[#a0b3b0] hover:bg-h-glass hover:text-white'
                       }`}
                     >
                       حساب جديد
@@ -158,8 +158,8 @@ export default function Auth({ onClose }) {
                       onClick={(e) => handleTabClick(e, 'login')}
                       className={`block py-2.5 px-2.5 text-center text-xl cursor-pointer transition-all duration-500 ease-in-out rounded-2xl ${
                         activeTab === 'login'
-                          ? 'bg-[#01939c] text-white'
-                          : 'bg-[rgba(160,179,176,0.25)] text-[#a0b3b0] hover:bg-h-glass hover:text-white'
+                          ? 'bg-[#000000] text-white'
+                          : 'bg-[rgba(0,0,0,0.74)] text-[#a0b3b0] hover:bg-h-glass hover:text-white'
                       }`}
                     >
                       تسجيل الدخول
@@ -171,7 +171,7 @@ export default function Auth({ onClose }) {
 
                 <div className="w-full">
                   <div id="signup" style={{ display: activeTab === 'signup' ? 'block' : 'none' }}>
-                    <h1 className="text-center text-white font-light text-3xl mb-2.5">مرحباً</h1>
+                    <h1 className="text-center text-black font-light text-3xl mb-2.5">مرحباً</h1>
                     <form onSubmit={handleSubmit} autoComplete="off">
                       <div className="mb-4">
                         <div className="w-full relative">
@@ -181,7 +181,7 @@ export default function Auth({ onClose }) {
                             name="signup_full_name"
                             value={formData.signup_full_name}
                             onChange={handleInputChange}
-                            className="text-lg w-full py-2.5 px-4 bg-transparent border border-[#01939c] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#179b77]"
+                            className="text-lg w-full py-2.5 px-4 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
                             placeholder="الاسم الكامل"
                             autoComplete="new-full-name"
                           />
@@ -194,7 +194,7 @@ export default function Auth({ onClose }) {
                           name="signup_email"
                           value={formData.signup_email}
                           onChange={handleInputChange}
-                          className="text-lg w-full py-2.5 px-4 bg-transparent border border-[#01939c] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#179b77]"
+                          className="text-lg w-full py-2.5 px-4 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
                           placeholder="البريد الإلكتروني"
                           autoComplete="new-email"
                         />
@@ -206,7 +206,7 @@ export default function Auth({ onClose }) {
                           name="signup_password"
                           value={formData.signup_password}
                           onChange={handleInputChange}
-                          className="text-lg w-full py-2.5 px-4 pl-10 bg-transparent border border-[#01939c] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#179b77]"
+                          className="text-lg w-full py-2.5 px-4 pl-10 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
                           placeholder="كلمة المرور"
                           autoComplete="new-password"
                         />
@@ -228,13 +228,13 @@ export default function Auth({ onClose }) {
                         </button>
                       </div>
 
-                      <button type="submit" className="w-full py-2.5 px-0 text-xl font-normal bg-[#01939c] text-white rounded-2xl cursor-pointer transition-all duration-500 ease-in-out hover:bg-[#179b77]">
+                      <button type="submit" className="w-full py-2.5 px-0 text-xl font-normal bg-[#000000] text-white rounded-2xl cursor-pointer transition-all duration-500 ease-in-out hover:bg-[#333333]">
                         تسجيل
                       </button>
                     </form>
                   </div>
                   <div id="login" style={{ display: activeTab === 'login' ? 'block' : 'none' }}>
-                    <h1 className="text-center text-white font-light text-3xl mb-2.5">مرحباً بعودتك</h1>
+                    <h1 className="text-center text-black font-light text-3xl mb-2.5">مرحباً بعودتك</h1>
                     <form onSubmit={handleSubmit} autoComplete="off">
                       <div className="mb-10 relative">
                         <input
@@ -243,7 +243,7 @@ export default function Auth({ onClose }) {
                           name="login_email"
                           value={formData.login_email}
                           onChange={handleInputChange}
-                          className="text-lg w-full py-2.5 px-4 bg-transparent border border-[#01939c] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#179b77]"
+                          className="text-lg w-full py-2.5 px-4 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
                           placeholder="البريد الإلكتروني"
                           autoComplete="new-email"
                         />
@@ -255,7 +255,7 @@ export default function Auth({ onClose }) {
                           name="login_password"
                           value={formData.login_password}
                           onChange={handleInputChange}
-                          className="text-lg w-full py-2.5 px-4 pl-10 bg-transparent border border-[#01939c] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#179b77]"
+                          className="text-lg w-full py-2.5 px-4 pl-10 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
                           placeholder="كلمة المرور"
                           autoComplete="new-password"
                         />
@@ -277,7 +277,7 @@ export default function Auth({ onClose }) {
                         </button>
                       </div>
 
-                      <button type="submit" className="w-full py-2.5 px-0 text-xl font-normal bg-[#01939c] text-white rounded-2xl cursor-pointer transition-all duration-500 ease-in-out hover:bg-[#179b77]">
+                      <button type="submit" className="w-full py-2.5 px-0 text-xl font-normal bg-[#000000] text-white rounded-2xl cursor-pointer transition-all duration-500 ease-in-out hover:bg-[#333333]">
                         تسجيل الدخول
                       </button>
                     </form>
