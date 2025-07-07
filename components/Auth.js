@@ -204,7 +204,8 @@ export default function Auth({ onClose }) {
                           name="signup_password"
                           value={formData.signup_password}
                           onChange={handleInputChange}
-                          className="text-lg w-full py-2.5 px-4 pl-10 bg-transparent border-2 border-[#777] text-black rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
+                          dir="rtl"
+                          className="text-lg w-full py-2.5 px-4 pr-5 bg-transparent border-2 border-[#777] text-black rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000] text-right"
                           placeholder="كلمة المرور"
                           autoComplete="new-password"
                         />
@@ -254,7 +255,7 @@ export default function Auth({ onClose }) {
                           value={formData.login_password}
                           onChange={handleInputChange}
                           dir="rtl"
-                          className="text-lg w-full py-2.5 px-4 pr-5 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000] text-right"
+                          className="text-lg w-full py-2.5 px-4 pr-5 bg-transparent border-2 border-[#777] text-black rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000] text-right"
                           placeholder="كلمة المرور"
                           autoComplete="new-password"
                         />
