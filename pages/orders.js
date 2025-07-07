@@ -138,7 +138,7 @@ export default function Orders() {
                                         {order.items.reduce((total, item) => total + item.quantity, 0)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        {order.totalAmount} درهم
+                                        {order.totalAmount} ريال
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         {new Date(order.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}

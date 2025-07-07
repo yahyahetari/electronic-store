@@ -167,7 +167,7 @@ export default function ProductBox({ _id, title, images, variants, slug, ratings
             </div>
 
             <div className="pr-2 flex justify-between items-center mt-auto pb-2">
-              <p className="font-light text-sm sm:font-bold sm:text-base">{firstPrice} درهم</p>
+              <p className="font-light text-sm sm:font-bold sm:text-base">{firstPrice} ريال</p>
               <svg
                 onClick={handleAddToCart}
                 xmlns="http://www.w3.org/2000/svg"

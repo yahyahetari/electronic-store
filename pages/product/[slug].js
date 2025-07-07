@@ -212,7 +212,7 @@ export default function ProductPage({ product, sameSubcategoryProducts, otherSub
                             </div>
                             {selectedVariant && (
                                 <div className="mt-4">
-                                    <p className="text-xl font-semibold">{selectedVariant.price} درهم</p>
+                                    <p className="text-xl font-semibold">{selectedVariant.price} ريال</p>
                                     {selectedVariant.stock < 5 && (
                                         <p className="text-sm text-red-600">
                                             باقي {selectedVariant.stock} قطع فقط

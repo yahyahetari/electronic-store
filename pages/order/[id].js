@@ -108,7 +108,7 @@ export default function Order() {
                                             <p className="text-gray-600">{item.quantity}</p>
                                         </td>
                                         <td className="border border-gray-200 p-2">
-                                            <p className="font-semibold text-gray-800">{item.price * item.quantity} درهم</p>
+                                            <p className="font-semibold text-gray-800">{item.price * item.quantity} ريال</p>
                                         </td>
                                     </tr>
                                 ))}
@@ -125,7 +125,7 @@ export default function Order() {
                         </div>
 
                         <div className="mt-6 text-right">
-                            <p className="text-2xl font-bold text-gray-800">الإجمالي: {order.totalAmount} درهم</p>
+                            <p className="text-2xl font-bold text-gray-800">الإجمالي: {order.totalAmount} ريال</p>
                         </div>
                     </div>
 

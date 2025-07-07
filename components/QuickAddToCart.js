@@ -260,7 +260,7 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
                         <h2 className="text-xl text-center font-bold">{product.title}</h2>
                         <RatingStars rating={averageRating} />
                         <p className={`text-lg text-center font-semibold ${!selectedVariant ? 'text-red-600' : ''}`}>
-                            {selectedVariant ? `${selectedVariant.price} درهم` : 'اختر مواصفات متاحة'}
+                            {selectedVariant ? `${selectedVariant.price} ريال` : 'اختر مواصفات متاحة'}
                         </p>
                         {product.variants[0]?.properties &&
                             Object.entries(product.variants[0].properties).map(([name, values]) => (

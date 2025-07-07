@@ -381,7 +381,7 @@ export default function Checkout() {
                                             return (
                                                 <tr key={product._id} className="border border-gray-200">
                                                     <td className="border border-gray-200 p-2">{product.title}</td>
-                                                    <td className="border border-gray-200 p-2">{totalPrice} <span className="text-lg">درهم</span></td>
+                                                    <td className="border border-gray-200 p-2">{totalPrice} <span className="text-lg">ريال</span></td>
                                                     {allProperties.map(prop => (
                                                         <td key={prop} className="border border-gray-200 p-2">
                                                             {product.properties?.[prop] || ''}
@@ -399,15 +399,15 @@ export default function Checkout() {
                         <div className="flex flex-col gap-2">
                             <div className="flex justify-between items-center">
                                 <span className="font-bold">سعر المنتجات</span>
-                                <span className="font-bold">{totalRounded} درهم</span>
+                                <span className="font-bold">{totalRounded} ريال</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="font-bold">سعر التوصيل</span>
-                                <span className="font-bold">{SHIPPING_COST} درهم</span>
+                                <span className="font-bold">{SHIPPING_COST} ريال</span>
                             </div>
                             <div className="flex justify-between items-center border-t pt-2">
                                 <span className="font-bold">المجموع الكلي</span>
-                                <span className="font-bold text-xl">{(Number(totalRounded) + SHIPPING_COST).toFixed(2)} درهم</span>
+                                <span className="font-bold text-xl">{(Number(totalRounded) + SHIPPING_COST).toFixed(2)} ريال</span>
                             </div>
                         </div>
                         <button
