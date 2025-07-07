@@ -36,7 +36,7 @@ const VerificationForm = ({ onVerify, correctCode }) => {
           maxLength="6"
           value={code}
           onChange={handleChange}
-          className="w-48 h-12 text-2xl text-center border-2 border-[#000000] rounded-md bg-transparent text-white"
+          className="w-48 h-12 text-2xl text-center border-2 border-[#000000] rounded-md bg-transparent text-black"
         />
       </div>
       <button
