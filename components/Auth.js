@@ -57,7 +57,7 @@ export default function Auth({ onClose }) {
             password: formData.signup_password
           })
         });
-        
+
         if (response.ok) {
           const code = Math.floor(100000 + Math.random() * 900000).toString();
           setVerificationCode(code);
@@ -96,7 +96,7 @@ export default function Auth({ onClose }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: formData.signup_email })
           });
-          
+
           if (response.ok) {
             const result = await signIn("credentials", {
               redirect: false,
@@ -143,11 +143,10 @@ export default function Auth({ onClose }) {
                     <a
                       href="#signup"
                       onClick={(e) => handleTabClick(e, 'signup')}
-                      className={`block py-2.5 px-2.5 text-center text-xl cursor-pointer transition-all duration-500 ease-in-out rounded-2xl ${
-                        activeTab === 'signup'
+                      className={`block py-2.5 px-2.5 text-center text-xl cursor-pointer transition-all duration-500 ease-in-out rounded-2xl ${activeTab === 'signup'
                           ? 'bg-[#000000] text-white'
                           : 'bg-[rgba(0,0,0,0.74)] text-[#a0b3b0] hover:bg-h-glass hover:text-white'
-                      }`}
+                        }`}
                     >
                       حساب جديد
                     </a>
@@ -156,11 +155,10 @@ export default function Auth({ onClose }) {
                     <a
                       href="#login"
                       onClick={(e) => handleTabClick(e, 'login')}
-                      className={`block py-2.5 px-2.5 text-center text-xl cursor-pointer transition-all duration-500 ease-in-out rounded-2xl ${
-                        activeTab === 'login'
+                      className={`block py-2.5 px-2.5 text-center text-xl cursor-pointer transition-all duration-500 ease-in-out rounded-2xl ${activeTab === 'login'
                           ? 'bg-[#000000] text-white'
                           : 'bg-[rgba(0,0,0,0.74)] text-[#a0b3b0] hover:bg-h-glass hover:text-white'
-                      }`}
+                        }`}
                     >
                       تسجيل الدخول
                     </a>
@@ -255,7 +253,8 @@ export default function Auth({ onClose }) {
                           name="login_password"
                           value={formData.login_password}
                           onChange={handleInputChange}
-                          className="text-lg w-full py-2.5 px-4 pl-10 bg-transparent border-2 border-[#777] text-black rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000]"
+                          dir="rtl"
+                          className="text-lg w-full py-2.5 px-4 pr-5 bg-transparent border-2 border-[#777] text-white rounded-md transition-all duration-250 ease-in-out focus:outline-none focus:border-[#000] text-right"
                           placeholder="كلمة المرور"
                           autoComplete="new-password"
                         />
