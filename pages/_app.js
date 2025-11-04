@@ -7,10 +7,29 @@ import Footer from '@/components/Footer';
 import { DefaultSeo } from 'next-seo';
 import SEO from '../next-seo.config';
 import Head from 'next/head';
+import { useEffect } from 'react';
 
 export default function App({
   Component, pageProps: { session, ...pageProps }
 }) {
+  useEffect(() => {
+    // التعامل مع أخطاء JavaScript العامة
+    const handleError = (event) => {
+      if (event.filename && event.filename.includes('share-modal.js')) {
+        console.warn('Share modal script not found, but continuing...');
+        event.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    
+    // تنظيف عند unmount
+    return () => {
+      window.removeEventListener('error', handleError);
+    };
+  }, []);
+
   return (
     <SessionProvider session={session}>
       <CartContextProvider>

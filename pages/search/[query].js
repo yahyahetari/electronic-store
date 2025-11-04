@@ -228,7 +228,7 @@ export default function SearchPage({ searchedProducts, query, categories, proper
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center bg-gray-500 text-white text-lg px-4 py-2 rounded-lg hover:bg-primary-dark transition"
+          className="flex items-center bg-blue-900 text-white text-lg  px-4 py-2 rounded-lg hover:bg-slate-500 transition"
         >
           <FaFilter className="mr-2" />
           {showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}
@@ -243,20 +243,20 @@ export default function SearchPage({ searchedProducts, query, categories, proper
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3 }}
-              className="col-span-1 bg-gray-500 p-4 rounded-lg shadow-lg"
+              className="col-span-1 bg-slate-300 p-4 rounded-lg shadow-lg"
             >
-              <h2 className="text-xl font-semibold mb-4 text-white">الفلاتر</h2>
+              <h2 className="text-xl font-semibold mb-4 text-black">الفلاتر</h2>
 
               {categories.length > 0 && (
                 <div className="mb-4">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleSection('categories')}>
-                    <h3 className="font-semibold text-lg mb-2 text-white">الفئات</h3>
-                    {openSections['categories'] ? <FaChevronUp className="text-white" /> : <FaChevronDown className="text-white" />}
+                    <h3 className="font-semibold text-lg mb-2 text-black">الفئات</h3>
+                    {openSections['categories'] ? <FaChevronUp className="text-black" /> : <FaChevronDown className="text-black" />}
                   </div>
                   {openSections['categories'] && (
                     <div className="space-y-2 mt-2">
                       {categories.map(cat => (
-                        <label key={cat._id} className="flex items-center text-white">
+                        <label key={cat._id} className="flex items-center text-black">
                           <input
                             type="checkbox"
                             checked={currentFilters.category?.includes(cat._id)}
@@ -273,8 +273,8 @@ export default function SearchPage({ searchedProducts, query, categories, proper
 
               <div className="mb-4">
                 <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleSection('price')}>
-                  <label className="block text-base font-semibold text-white">نطاق السعر</label>
-                  {openSections['price'] ? <FaChevronUp className="text-white" /> : <FaChevronDown className="text-white" />}
+                  <label className="block text-base font-semibold text-black">نطاق السعر</label>
+                  {openSections['price'] ? <FaChevronUp className="text-black" /> : <FaChevronDown className="text-black" />}
                 </div>
                 {openSections['price'] && (
                   <div className="flex space-x-2 mt-2">
@@ -284,7 +284,7 @@ export default function SearchPage({ searchedProducts, query, categories, proper
                       placeholder="الحد الأدنى"
                       value={currentFilters.minPrice === '' ? '' : currentFilters.minPrice}
                       onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                      className="w-1/2 border rounded p-2 bg-white"
+                      className="w-1/2 border rounded p-2 bg-black"
                     />
                     <input
                       type="number"
@@ -301,13 +301,13 @@ export default function SearchPage({ searchedProducts, query, categories, proper
               {Object.entries(properties).map(([propertyName, values]) => (
                 <div key={propertyName} className="mb-4">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleSection(propertyName)}>
-                    <h3 className="font-semibold text-lg mb-2 text-white">{propertyName}</h3>
-                    {openSections[propertyName] ? <FaChevronUp className="text-white" /> : <FaChevronDown className="text-white" />}
+                    <h3 className="font-semibold text-lg mb-2 text-black">{propertyName}</h3>
+                    {openSections[propertyName] ? <FaChevronUp className="text-black" /> : <FaChevronDown className="text-black" />}
                   </div>
                   {openSections[propertyName] && (
                     <div className="space-y-2 mt-2">
                       {values.map(value => (
-                        <label key={value} className="flex items-center text-white">
+                        <label key={value} className="flex items-center text-black">
                           <input
                             type="checkbox"
                             checked={currentFilters[`property_${propertyName}`]?.includes(value)}
@@ -324,12 +324,12 @@ export default function SearchPage({ searchedProducts, query, categories, proper
 
               <div className="mb-4">
                 <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleSection('sortOrder')}>
-                  <h3 className="font-semibold mb-2 text-lg text-white">الترتيب</h3>
-                  {openSections['sortOrder'] ? <FaChevronUp className="text-white" /> : <FaChevronDown className="text-white" />}
+                  <h3 className="font-semibold mb-2 text-lg text-black">الترتيب</h3>
+                  {openSections['sortOrder'] ? <FaChevronUp className="text-black" /> : <FaChevronDown className="text-black" />}
                 </div>
                 {openSections['sortOrder'] && (
                   <div className="space-y-2 mt-2">
-                    <label className="flex items-center text-base text-white">
+                    <label className="flex items-center text-base text-black">
                       <input
                         type="checkbox"
                         checked={sortOrder === 'asc'}
@@ -339,7 +339,7 @@ export default function SearchPage({ searchedProducts, query, categories, proper
                       <FaSortAmountUp className="mr-2 text-sm" />
                       السعر: الأرخص
                     </label>
-                    <label className="flex items-center text-base text-white">
+                    <label className="flex items-center text-base text-black">
                       <input
                         type="checkbox"
                         checked={sortOrder === 'desc'}
@@ -357,7 +357,7 @@ export default function SearchPage({ searchedProducts, query, categories, proper
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={applyFilters}
-                className="w-full bg-accent text-white text-xl font-bold p-2 rounded-lg hover:bg-accent-dark transition"
+                className="w-full bg-slate-500 text-black text-xl font-bold p-2 rounded-lg hover:bg-accent-dark transition"
               >
                 تطبيق الفلاتر
               </motion.button>

@@ -12,11 +12,11 @@ export default async function handler(req, res) {
 
   try {
     await connectToDB();
-    
+
     // Handle DELETE request
     if (req.method === 'DELETE') {
       const { productId, ratingId } = req.body;
-      
+
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({ message: 'المنتج غير موجود' });
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     // Handle PUT request (edit)
     if (req.method === 'PUT') {
       const { productId, ratingId, newRating, newReview } = req.body;
-      
+
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({ message: 'المنتج غير موجود' });
@@ -81,18 +81,17 @@ export default async function handler(req, res) {
       }
 
       const userRatingsCount = product.ratings.filter(r => r.user.email === session.user.email).length;
-      
+
       if (userRatingsCount >= 3) {
         return res.status(403).json({ message: 'لقد وصلت إلى الحد الأقصى المسموح به من التعليقات (3 تعليقات)' });
       }
 
       const userOrder = await Order.findOne({
         email: session.user.email,
-        'line_items': {
-          $elemMatch: {
-            'price_data.product_data.name': product.title
-          }
-        }
+        $or: [
+          { 'items.productId': productId },
+          { 'items.title': product.title }
+        ]
       });
 
       if (!userOrder) {

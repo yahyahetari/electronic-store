@@ -124,64 +124,64 @@ export default function Checkout() {
     }
     
     async function goToPayment() {
-        const validationErrors = validateFields();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+    const validationErrors = validateFields();
+    if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+    }
+
+    try {
+        setProcessingOrder(true);
+        
+        // التحقق من المخزون أولاً
+        const stockResponse = await axios.post('/api/verify-stock', {
+            items: products.map(item => ({
+                productId: item._id,
+                properties: item.properties || {},
+                quantity: parseInt(item.quantity)
+            }))
+        });
+
+        if (!stockResponse.data.success) {
+            toast.error(stockResponse.data.message);
+            router.push('/cart');
             return;
         }
-    
-        try {
-            setProcessingOrder(true);
-            
-            // First verify stock
-            const stockResponse = await axios.post('/api/verify-stock', {
-                items: products.map(item => ({
-                    productId: item._id,
-                    properties: item.selectedProperties || item.properties,
-                    quantity: parseInt(item.quantity)
-                }))
-            });
-    
-            if (!stockResponse.data.success) {
-                toast.error(stockResponse.data.message);
-                router.push('/cart');
-                return;
-            }
-    
-            // Then proceed with checkout
-            const checkoutResponse = await axios.post('/api/checkout', {
-                firstName,
-                lastName,
-                email,
-                phone,
-                address,
-                address2,
-                state,
-                city,
-                country,
-                postalCode,
-                notes,
-                cartItems: JSON.stringify(products.map(item => ({
-                    id: item._id,
-                    title: item.title,
-                    price: item.price,
-                    quantity: parseInt(item.quantity),
-                    properties: item.selectedProperties || item.properties,
-                    image: item.images?.[0]
-                })))
-            });
-    
-            if (checkoutResponse.data.url) {
-                window.location = checkoutResponse.data.url;
-            }
-    
-        } catch (error) {
-            console.error('Checkout Error:', error);
-            toast.error('حدث خطأ في النظام، يرجى المحاولة مرة أخرى');
-        } finally {
-            setProcessingOrder(false);
+
+        // المتابعة إلى الدفع
+        const checkoutResponse = await axios.post('/api/checkout', {
+            firstName,
+            lastName,
+            email,
+            phone,
+            address,
+            address2,
+            state,
+            city,
+            country,
+            postalCode,
+            notes,
+            cartItems: JSON.stringify(products.map(item => ({
+                id: item._id,
+                title: item.title,
+                price: item.price,
+                quantity: parseInt(item.quantity),
+                properties: item.properties || {},
+                image: item.images?.[0] || ''
+            })))
+        });
+
+        if (checkoutResponse.data.url) {
+            window.location = checkoutResponse.data.url;
         }
+
+    } catch (error) {
+        console.error('Checkout Error:', error);
+        toast.error('حدث خطأ في النظام، يرجى المحاولة مرة أخرى');
+    } finally {
+        setProcessingOrder(false);
     }
+}
     
     
     const total = products.reduce((acc, product) => {
@@ -297,7 +297,7 @@ export default function Checkout() {
                                     value={state}
                                     onChange={(e) => setState(e.target.value)}
                                     className="p-2 mt-1 border w-full border-gray-400 rounded"
-                                    placeholder="الولاية"
+                                    placeholder="المحافظة"
                                 />
                             </div>
                             <div className="flex-1">

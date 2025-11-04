@@ -23,10 +23,10 @@ export default function Home({ categories, allProducts, error }) {
 
     const banners = [
         "/banner2.png",
-        "/banner3.jpg",
+        "/banner3.png",
         "/banner4.jpg",
         "/banner5.jpg",
-        "/banner6.jpg",
+        "/banner6.png",
     ];
 
     useEffect(() => {
@@ -120,7 +120,7 @@ export default function Home({ categories, allProducts, error }) {
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Banner section */}
-            <div className="relative w-full h-[60vh] md:h-[70vh] lg:h-[85vh] ">
+            <div className="relative w-full h-[30vh] md:h-[50vh] lg:h-[60vh] ">
                 <div {...handlers} className="relative w-full h-full">
                     {banners.map((banner, index) => (
                         <Image

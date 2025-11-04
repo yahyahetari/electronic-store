@@ -162,7 +162,7 @@ export default function CategoryPage({ category, subcategories, products }) {
     <div className="min-h-screen bg-gray-100" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <Link href="/" legacyBehavior>
-          <button className="mt-8 w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-full font-semibold transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+          <button className="mt-8 w-full py-3 bg-black text-white rounded-full font-semibold transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
             العودة إلى الرئيسية
           </button>
         </Link>
@@ -199,7 +199,7 @@ export default function CategoryPage({ category, subcategories, products }) {
           <div className="flex justify-between items-center mb-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center"
+                className="bg-black text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition flex items-center"
             >
               <FaFilter className="ml-2" />
               {showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}
@@ -283,7 +283,7 @@ export default function CategoryPage({ category, subcategories, products }) {
 
                   <button
                     onClick={() => setShowFilters(false)}
-                    className="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                    className="mt-4 w-full bg-black text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition"
                   >
                     إخفاء الفلاتر
                   </button>

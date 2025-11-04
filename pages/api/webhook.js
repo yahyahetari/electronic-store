@@ -28,15 +28,18 @@ export default async function handler(req, res) {
 
         if (paid) {
             try {
-                // Reconstruct order data from metadata
+                // إعادة بناء بيانات الطلب من metadata
                 const orderIds = metadata.orderIds.split(',');
                 const quantities = metadata.quantities.split(',').map(Number);
                 const prices = metadata.prices.split(',').map(Number);
+                const properties = JSON.parse(metadata.properties || '[]');
                 const [firstName, lastName] = metadata.customerName.split(' ');
                 const [email, phone] = metadata.contactInfo.split('|');
                 const [address, city, country, postalCode] = metadata.shippingAddress.split('|');
+                const address2 = metadata.address2 || '';
+                const state = metadata.state || '';
 
-                // Fetch products to get full details
+                // جلب تفاصيل المنتجات
                 const products = await Product.find({ _id: { $in: orderIds } });
 
                 const orderItems = orderIds.map((id, index) => {
@@ -46,11 +49,12 @@ export default async function handler(req, res) {
                         title: product.title,
                         quantity: quantities[index],
                         price: prices[index],
-                        image: product.images[0]
+                        properties: properties[index] || {},
+                        image: product.images?.[0] || ''
                     };
                 });
 
-                const totalAmount = orderItems.reduce((sum, item) =>
+                const totalAmount = orderItems.reduce((sum, item) => 
                     sum + (item.price * item.quantity), 0) + SHIPPING_COST / 100;
 
                 const orderDoc = await Order.create({
@@ -61,6 +65,8 @@ export default async function handler(req, res) {
                     email,
                     phone,
                     address,
+                    address2,
+                    state,
                     city,
                     country,
                     postalCode,
@@ -70,12 +76,23 @@ export default async function handler(req, res) {
                     paymentId: session.payment_intent
                 });
 
-                // Update product stock
+                // تحديث مخزون المنتجات
                 for (let i = 0; i < orderIds.length; i++) {
                     const product = products.find(p => p._id.toString() === orderIds[i]);
                     if (product) {
-                        // Update main stock if no variants
-                        if (!product.variants || product.variants.length === 0) {
+                        // إذا كان المنتج يحتوي على متغيرات
+                        if (product.variants && product.variants.length > 0) {
+                            const variantProps = properties[i] || {};
+                            const variant = product.variants.find(v => 
+                                Object.keys(variantProps).every(
+                                    key => v.properties[key] === variantProps[key]
+                                )
+                            );
+                            if (variant) {
+                                variant.stock -= quantities[i];
+                            }
+                        } else {
+                            // إذا لم يكن لديه متغيرات، تحديث المخزون الرئيسي
                             product.stock -= quantities[i];
                         }
                         await product.save();

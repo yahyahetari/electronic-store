@@ -29,29 +29,83 @@ export default function Products({ allProducts, categories }) {
 
   const productsPerPage = 8;
 
+  // دالة تحديث الخصائص المتاحة مع ترتيب ذكي
+  const updateAvailableProperties = (products) => {
+    const properties = {};
+    
+    products.forEach(product => {
+      if (product.variants && product.variants.length > 0) {
+        product.variants.forEach(variant => {
+          if (variant.properties) {
+            Object.entries(variant.properties).forEach(([key, values]) => {
+              if (!properties[key]) {
+                properties[key] = new Set();
+              }
+              (Array.isArray(values) ? values : [values]).forEach(value => {
+                properties[key].add(value);
+              });
+            });
+          }
+        });
+      } else if (product.properties) {
+        // احتياطي للمنتجات بدون variants
+        Object.entries(product.properties).forEach(([key, values]) => {
+          if (!properties[key]) {
+            properties[key] = new Set();
+          }
+          (Array.isArray(values) ? values : [values]).forEach(value => {
+            properties[key].add(value);
+          });
+        });
+      }
+    });
+
+    // دالة الترتيب الذكي المحسن للخصائص
+    const smartSort = (values) => {
+      return values.sort((a, b) => {
+        const aStr = a.toString();
+        const bStr = b.toString();
+        
+        // استخراج الأرقام من النص بطريقة أكثر دقة
+        const extractNumbers = (text) => {
+          const matches = text.match(/\d+/g);
+          return matches ? matches.map(Number) : [0];
+        };
+        
+        const aNumbers = extractNumbers(aStr);
+        const bNumbers = extractNumbers(bStr);
+        
+        // إذا كان كلاهما يحتوي على أرقام
+        if (aNumbers.length > 0 && bNumbers.length > 0) {
+          // مقارنة الرقم الأول (التخزين عادة)
+          if (aNumbers[0] !== bNumbers[0]) {
+            return aNumbers[0] - bNumbers[0];
+          }
+          // إذا كان الرقم الأول متساوي، قارن الرقم الثاني (RAM عادة)
+          if (aNumbers.length > 1 && bNumbers.length > 1) {
+            return aNumbers[1] - bNumbers[1];
+          }
+          // إذا كان أحدهما يحتوي على رقم واحد والآخر أكثر
+          return aNumbers.length - bNumbers.length;
+        }
+        
+        // ترتيب أبجدي للنصوص العادية
+        return aStr.localeCompare(bStr, 'ar');
+      });
+    };
+
+    const formattedProperties = {};
+    Object.entries(properties).forEach(([key, values]) => {
+      const valuesArray = Array.from(values);
+      formattedProperties[key] = smartSort(valuesArray);
+    });
+
+    setAvailableProperties(formattedProperties);
+  };
+
   useEffect(() => {
     if (allProducts && allProducts.length > 0) {
-      const properties = {};
-      allProducts.forEach(product => {
-        if (product.properties) {
-          Object.entries(product.properties).forEach(([key, value]) => {
-            if (!properties[key]) {
-              properties[key] = new Set();
-            }
-            if (Array.isArray(value)) {
-              value.forEach(v => properties[key].add(v));
-            } else {
-              properties[key].add(value);
-            }
-          });
-        }
-      });
-
-      Object.keys(properties).forEach(key => {
-        properties[key] = Array.from(properties[key]);
-      });
-
-      setAvailableProperties(properties);
+      updateAvailableProperties(allProducts);
       applyFilters(allProducts);
     }
 
@@ -66,62 +120,100 @@ export default function Products({ allProducts, categories }) {
     applyFilters(allProducts);
   }, [currentFilters, selectedMainCategory]);
 
+  // دالة تطبيق الفلاتر المحسنة
   const applyFilters = (products) => {
     if (!products) return;
     
     let filtered = [...products].filter(product => {
-      // Get the minimum price from variants
-      const minPrice = Math.min(...product.variants.map(v => v.price));
+      // فلترة السعر بناءً على المتغيرات
+      let productPrice;
+      if (product.variants && product.variants.length > 0) {
+        const variantPrices = product.variants.map(v => v.price);
+        productPrice = Math.min(...variantPrices);
+      } else {
+        productPrice = product.price || 0;
+      }
       
-      if (currentFilters.minPrice !== '' && minPrice < Number(currentFilters.minPrice)) return false;
-      if (currentFilters.maxPrice !== '' && minPrice > Number(currentFilters.maxPrice)) return false;
-  
+      if (currentFilters.minPrice !== '' && productPrice < Number(currentFilters.minPrice)) return false;
+      if (currentFilters.maxPrice !== '' && productPrice > Number(currentFilters.maxPrice)) return false;
+
+      // فلتر الفئات
       if (selectedMainCategory) {
         const subCategories = categories
           .filter(cat => cat.parent === selectedMainCategory)
           .map(cat => cat._id);
         
         if (currentFilters.category) {
-          return product.category === currentFilters.category;
+          if (product.category !== currentFilters.category) return false;
         } else {
-          return product.category === selectedMainCategory || subCategories.includes(product.category);
+          if (product.category !== selectedMainCategory && !subCategories.includes(product.category)) return false;
         }
       }
-  
+
+      // فلترة الخصائص المحسنة - الحل الصحيح
       for (const [key, values] of Object.entries(currentFilters.properties)) {
         if (values.length > 0) {
-          if (!product.properties || !product.properties[key] ||
-            (Array.isArray(product.properties[key])
-              ? !product.properties[key].some(v => values.includes(v))
-              : !values.includes(product.properties[key]))) {
-            return false;
+          let hasMatchingProperty = false;
+          
+          // التحقق من المتغيرات أولاً
+          if (product.variants && product.variants.length > 0) {
+            // نبحث عن variant واحد على الأقل يحتوي على أي من القيم المختارة
+            hasMatchingProperty = product.variants.some(variant => {
+              if (!variant.properties || !variant.properties[key]) return false;
+              
+              const variantPropertyValues = Array.isArray(variant.properties[key])
+                ? variant.properties[key]
+                : [variant.properties[key]];
+              
+              // نتحقق إذا كان الـ variant يحتوي على أي من القيم المختارة
+              return values.some(value => variantPropertyValues.includes(value));
+            });
+          } 
+          // احتياطي للمنتجات بدون variants
+          else if (product.properties && product.properties[key]) {
+            const productPropertyValues = Array.isArray(product.properties[key]) 
+              ? product.properties[key] 
+              : [product.properties[key]];
+            // نتحقق إذا كان المنتج يحتوي على أي من القيم المختارة
+            hasMatchingProperty = values.some(value => productPropertyValues.includes(value));
           }
+          
+          if (!hasMatchingProperty) return false;
         }
       }
       return true;
     });
-  
+
+    // الترتيب المحسن
     if (currentFilters.sortOrder === 'asc') {
       filtered.sort((a, b) => {
-        const minPriceA = Math.min(...a.variants.map(v => v.price));
-        const minPriceB = Math.min(...b.variants.map(v => v.price));
-        return minPriceA - minPriceB;
+        const priceA = a.variants && a.variants.length > 0 
+          ? Math.min(...a.variants.map(v => v.price)) 
+          : a.price || 0;
+        const priceB = b.variants && b.variants.length > 0 
+          ? Math.min(...b.variants.map(v => v.price)) 
+          : b.price || 0;
+        return priceA - priceB;
       });
     } else if (currentFilters.sortOrder === 'desc') {
       filtered.sort((a, b) => {
-        const minPriceA = Math.min(...a.variants.map(v => v.price));
-        const minPriceB = Math.min(...b.variants.map(v => v.price));
-        return minPriceB - minPriceA;
+        const priceA = a.variants && a.variants.length > 0 
+          ? Math.min(...a.variants.map(v => v.price)) 
+          : a.price || 0;
+        const priceB = b.variants && b.variants.length > 0 
+          ? Math.min(...b.variants.map(v => v.price)) 
+          : b.price || 0;
+        return priceB - priceA;
       });
     }
-  
+
     setFilteredProducts(filtered);
     setDisplayedProducts(filtered.slice(0, productsPerPage));
     setHasMore(filtered.length > productsPerPage);
     setPage(1);
   };
-  
 
+  // دالة معالجة تغيير الفلاتر
   const handleFilterChange = (name, value) => {
     setCurrentFilters(prev => {
       if (name.startsWith('property_')) {
@@ -188,6 +280,7 @@ export default function Products({ allProducts, categories }) {
               <div className="bg-gray-300 p-6 rounded-lg shadow-lg mb-4">
                 <h3 className="text-2xl font-semibold mb-4">الفلاتر</h3>
 
+                {/* فلتر الفئات */}
                 <FilterSection
                   title="الفئات"
                   name="categories"
@@ -255,14 +348,14 @@ export default function Products({ allProducts, categories }) {
                       placeholder="السعر الأدنى"
                       value={currentFilters.minPrice}
                       onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
                       type="number"
                       placeholder="السعر الأعلى"
                       value={currentFilters.maxPrice}
                       onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </FilterSection>
@@ -299,7 +392,7 @@ export default function Products({ allProducts, categories }) {
                     isOpen={openSections[propertyName]}
                     toggleSection={toggleSection}
                   >
-                    <div className="space-y-2 ">
+                    <div className="space-y-2">
                       {values.map(value => (
                         <Checkbox
                           key={value}
@@ -311,6 +404,13 @@ export default function Products({ allProducts, categories }) {
                     </div>
                   </FilterSection>
                 ))}
+
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="mt-4 w-full bg-black text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition"
+                >
+                  إخفاء الفلاتر
+                </button>
               </div>
             </div>
           )}
@@ -388,7 +488,7 @@ const RadioButton = ({ label, name, value, checked, onChange }) => (
       className="form-radio text-blue-600"
     />
     <span className="text-lg">{label}</span>
-    </label>
+  </label>
 );
 
 const Checkbox = ({ label, checked, onChange }) => (
@@ -397,10 +497,10 @@ const Checkbox = ({ label, checked, onChange }) => (
       type="checkbox"
       checked={checked}
       onChange={onChange}
-      className="form-checkbox text-blue-600 "
+      className="form-checkbox text-blue-600"
     />
     <span className="text-base">{label}</span>
-    </label>
+  </label>
 );
 
 export async function getServerSideProps() {

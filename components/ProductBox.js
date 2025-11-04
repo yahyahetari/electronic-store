@@ -44,6 +44,7 @@ const truncateText = (text, maxLength) => {
 export default function ProductBox({ _id, title, images, variants, slug, ratings }) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [hoveredColor, setHoveredColor] = useState(null);
 
   // استخراج جميع الألوان الفريدة من جميع المتغيرات
   const allColors = [...new Set(variants.flatMap(variant =>
@@ -59,7 +60,7 @@ export default function ProductBox({ _id, title, images, variants, slug, ratings
   return (
     <>
       <motion.div
-        className="flex flex-col gap-1 border border-slate-800 rounded-lg h-full"
+        className="flex flex-col gap-1 border shadow-2xl border-slate-800 rounded-lg h-full"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -87,16 +88,6 @@ export default function ProductBox({ _id, title, images, variants, slug, ratings
                     animate="visible"
                     variants={shimmerEffect}
                     transition={{ repeat: Infinity, duration: 0.9, ease: 'linear' }}
-                    style={{ width: '50%', opacity: 0.2 }}
-                  />
-                </div>
-                <div className="h-4 mr-1 bg-gray-400 rounded w-1/2 mb-1 ml-auto relative overflow-hidden">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
-                    initial="hidden"
-                    animate="visible"
-                    variants={shimmerEffect}
-                    transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
                     style={{ width: '50%', opacity: 0.2 }}
                   />
                 </div>
@@ -135,6 +126,51 @@ export default function ProductBox({ _id, title, images, variants, slug, ratings
                   className="w-[160px] h-full sm:w-[180px] sm:h-full rounded-md m-1.5 transition-transform duration-300 group-hover:scale-105 bg-white object-cover cursor-pointer"
                   onLoad={() => setIsImageLoaded(true)}
                 />
+                
+                {/* Color selector overlay */}
+                {allColors.length > 0 && (
+                  <div className="absolute  right-2 bottom-3 bg-h-glass rounded-lg shadow-md p-.5 flex flex-col gap-1">
+                    {allColors.slice(0, 5).map((color, index) => (
+                      <div
+                        key={index}
+                        className={`w-4.5 h-4.5 rounded-full border-2 relative flex items-center  ${
+                          hoveredColor === color
+                            ? 'border-black shadow-md'
+                            : 'border-gray-200'
+                        }`}
+                        onMouseEnter={() => setHoveredColor(color)}
+                        onMouseLeave={() => setHoveredColor(null)}
+                        title={color}
+                      >
+                        <div 
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor: getColorHex(color),
+                          }}
+                        />
+                        {hoveredColor === color && (
+                          <svg 
+                            className="absolute w-3.5 h-3.5 text-white drop-shadow-lg" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                            style={{
+                              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))'
+                            }}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    ))}
+                    {allColors.length > 5 && (
+                      <div className="text-[10px] font-bold text-center text-gray-100">
+                        +{allColors.length - 5}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 <div className="absolute inset-0 rounded-t-md bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-95 transition-opacity duration-300">
                   <span className="text-white text-lg font-semibold">عرض التفاصيل</span>
                 </div>
@@ -145,25 +181,6 @@ export default function ProductBox({ _id, title, images, variants, slug, ratings
               <p className="text-sm sm:text-base font-semibold" title={title}>
                 {truncateText(title, 17)}
               </p>
-
-              <div className="text-sm flex flex-wrap gap-0.5 mt-2">
-                {allColors.slice(0, 5).map((color, index) => (
-                  <span
-                    key={index}
-                    className="w-4 h-4 rounded-full inline-block border border-black"
-                    style={{
-                      backgroundColor: getColorHex(color),
-                      boxShadow: color === 'أبيض' ? 'inset 0 0 0 1px #000' : 'none'
-                    }}
-                    title={color}
-                  />
-                ))}
-                {allColors.length > 5 && (
-                  <span className="text-xs font-bold flex items-center">
-                    +{allColors.length - 5}
-                  </span>
-                )}
-              </div>
             </div>
 
             <div className="pr-2 flex justify-between items-center mt-auto pb-2">

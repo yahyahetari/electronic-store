@@ -63,7 +63,7 @@ export default function Order() {
                 <h1 className="text-4xl font-extrabold mb-2 -mt-6 text-center text-gray-800">تفاصيل الطلب</h1>
 
                 <div className="bg-white shadow-lg rounded-xl overflow-hidden">
-                    <div className="bg-gradient-to-l from-blue-500 to-purple-600 text-white px-6 py-4">
+                    <div className="bg-black text-white px-6 py-4">
                         <div className="flex justify-between items-center">
                             <span className="text-lg flex items-center">
                                 <Calendar className="ml-2" size={20} />
@@ -129,7 +129,7 @@ export default function Order() {
                         </div>
                     </div>
 
-                    <div className="mt-6 bg-blue-100 border-r-4 border-blue-500 text-blue-700 p-4 rounded">
+                    <div className="mt-6 bg-white border-r-4 border-black text-black p-4 rounded">
                         <p className="font-bold text-xl">وقت التسليم المتوقع</p>
                         <p className="text-lg">من المتوقع وصول طلبك خلال 1-3 أيام من تاريخ الطلب.</p>
                     </div>
@@ -137,7 +137,7 @@ export default function Order() {
 
                 <button
                     onClick={() => router.push('/orders')}
-                    className="mt-8 w-full bg-gradient-to-l from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full hover:from-blue-600 hover:to-purple-700 transition duration-300 ease-in-out flex items-center justify-center text-lg font-semibold"
+                    className="mt-8 w-full bg-black from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full hover:from-blue-600 hover:to-purple-700 transition duration-300 ease-in-out flex items-center justify-center text-lg font-semibold"
                 >
                     <ArrowLeft className="ml-2" size={20} />
                     العودة إلى الطلبات

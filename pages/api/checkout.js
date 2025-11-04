@@ -28,7 +28,7 @@ export default async function handler(req, res) {
             return {
                 quantity: cartItem.quantity,
                 price_data: {
-                    currency: 'AED',
+                    currency: 'SAR',
                     product_data: {
                         name: productInfo.title,
                         description: cartItem.properties ? 
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
         line_items.push({
             quantity: 1,
             price_data: {
-                currency: 'AED',
+                currency: 'SAR',
                 product_data: {
                     name: 'رسوم التوصيل',
                     description: 'خدمة التوصيل'
@@ -53,22 +53,27 @@ export default async function handler(req, res) {
             }
         });
 
-        // تقسيم البيانات إلى أجزاء صغيرة
+        // إنشاء metadata مع خصائص المنتجات
+        const metadata = {
+            orderIds: cartItemsArray.map(item => item.id).join(','),
+            quantities: cartItemsArray.map(item => item.quantity).join(','),
+            prices: cartItemsArray.map(item => item.price).join(','),
+            properties: JSON.stringify(cartItemsArray.map(item => item.properties || {})),
+            customerName: `${firstName} ${lastName}`,
+            contactInfo: `${email}|${phone}`,
+            shippingAddress: `${address}|${city}|${country}|${postalCode}`,
+            additionalInfo: notes || '',
+            address2: address2 || '',
+            state: state || ''
+        };
+
         const session = await stripe.checkout.sessions.create({
             line_items,
             mode: 'payment',
             customer_email: email,
             success_url: `${process.env.NEXT_PUBLIC_STORE_URL}/paysuccess`,
             cancel_url: `${process.env.NEXT_PUBLIC_STORE_URL}/cart`,
-            metadata: {
-                orderIds: cartItemsArray.map(item => item.id).join(','),
-                quantities: cartItemsArray.map(item => item.quantity).join(','),
-                prices: cartItemsArray.map(item => item.price).join(','),
-                customerName: `${firstName} ${lastName}`,
-                contactInfo: `${email}|${phone}`,
-                shippingAddress: `${address}|${city}|${country}|${postalCode}`,
-                additionalInfo: notes || ''
-            },
+            metadata: metadata
         });
 
         res.json({ url: session.url });

@@ -19,7 +19,157 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
     properties: {},
   });
   const [openSections, setOpenSections] = useState({});
-  const [allProperties, setAllProperties] = useState({});
+  const [availableProperties, setAvailableProperties] = useState({});
+
+  // دالة لتحديث الخصائص المتاحة مع ترتيب ذكي
+  const updateAvailableProperties = (products) => {
+    const properties = {};
+    
+    products.forEach(product => {
+      if (product.variants && product.variants.length > 0) {
+        product.variants.forEach(variant => {
+          if (variant.properties) {
+            Object.entries(variant.properties).forEach(([key, values]) => {
+              if (!properties[key]) {
+                properties[key] = new Set();
+              }
+              (Array.isArray(values) ? values : [values]).forEach(value => {
+                properties[key].add(value);
+              });
+            });
+          }
+        });
+      } else if (product.properties) {
+        // احتياطي للمنتجات بدون variants
+        Object.entries(product.properties).forEach(([key, values]) => {
+          if (!properties[key]) {
+            properties[key] = new Set();
+          }
+          (Array.isArray(values) ? values : [values]).forEach(value => {
+            properties[key].add(value);
+          });
+        });
+      }
+    });
+
+    // دالة الترتيب الذكي للخصائص
+    const smartSort = (values) => {
+      return values.sort((a, b) => {
+        const aStr = a.toString();
+        const bStr = b.toString();
+        
+        // استخراج الأرقام من النص
+        const extractNumbers = (text) => {
+          const matches = text.match(/\d+/g);
+          return matches ? matches.map(Number) : [0];
+        };
+        
+        const aNumbers = extractNumbers(aStr);
+        const bNumbers = extractNumbers(bStr);
+        
+        // إذا كان كلاهما يحتوي على أرقام
+        if (aNumbers.length > 0 && bNumbers.length > 0) {
+          // مقارنة الرقم الأول
+          if (aNumbers[0] !== bNumbers[0]) {
+            return aNumbers[0] - bNumbers[0];
+          }
+          // إذا كان الرقم الأول متساوي، قارن الرقم الثاني
+          if (aNumbers.length > 1 && bNumbers.length > 1) {
+            return aNumbers[1] - bNumbers[1];
+          }
+          return aNumbers.length - bNumbers.length;
+        }
+        
+        // ترتيب أبجدي للنصوص العادية
+        return aStr.localeCompare(bStr, 'ar');
+      });
+    };
+
+    const formattedProperties = {};
+    Object.entries(properties).forEach(([key, values]) => {
+      const valuesArray = Array.from(values);
+      formattedProperties[key] = smartSort(valuesArray);
+    });
+
+    setAvailableProperties(formattedProperties);
+  };
+
+  // دالة تطبيق الفلاتر المحسنة - مع الإصلاح
+  const applyFilters = (products) => {
+    if (!products) return;
+    
+    let filtered = [...products].filter(product => {
+      // فلترة السعر بناءً على المتغيرات
+      let productPrice;
+      if (product.variants && product.variants.length > 0) {
+        const variantPrices = product.variants.map(v => v.price);
+        productPrice = Math.min(...variantPrices);
+      } else {
+        productPrice = product.price || 0;
+      }
+      
+      if (currentFilters.minPrice !== '' && productPrice < Number(currentFilters.minPrice)) return false;
+      if (currentFilters.maxPrice !== '' && productPrice > Number(currentFilters.maxPrice)) return false;
+
+      // فلترة الخصائص المحسنة - الحل الصحيح ✅
+      for (const [key, values] of Object.entries(currentFilters.properties)) {
+        if (values.length > 0) {
+          let hasMatchingProperty = false;
+          
+          // التحقق من المتغيرات أولاً
+          if (product.variants && product.variants.length > 0) {
+            // نبحث عن variant واحد على الأقل يحتوي على أي من القيم المختارة
+            hasMatchingProperty = product.variants.some(variant => {
+              if (!variant.properties || !variant.properties[key]) return false;
+              
+              const variantPropertyValues = Array.isArray(variant.properties[key])
+                ? variant.properties[key]
+                : [variant.properties[key]];
+              
+              // نتحقق إذا كان الـ variant يحتوي على أي من القيم المختارة
+              return values.some(value => variantPropertyValues.includes(value));
+            });
+          } 
+          // احتياطي للمنتجات بدون variants
+          else if (product.properties && product.properties[key]) {
+            const productPropertyValues = Array.isArray(product.properties[key]) 
+              ? product.properties[key] 
+              : [product.properties[key]];
+            // نتحقق إذا كان المنتج يحتوي على أي من القيم المختارة
+            hasMatchingProperty = values.some(value => productPropertyValues.includes(value));
+          }
+          
+          if (!hasMatchingProperty) return false;
+        }
+      }
+      return true;
+    });
+
+    // الترتيب المحسن
+    if (currentFilters.sortOrder === 'asc') {
+      filtered.sort((a, b) => {
+        const priceA = a.variants && a.variants.length > 0 
+          ? Math.min(...a.variants.map(v => v.price)) 
+          : a.price || 0;
+        const priceB = b.variants && b.variants.length > 0 
+          ? Math.min(...b.variants.map(v => v.price)) 
+          : b.price || 0;
+        return priceA - priceB;
+      });
+    } else if (currentFilters.sortOrder === 'desc') {
+      filtered.sort((a, b) => {
+        const priceA = a.variants && a.variants.length > 0 
+          ? Math.min(...a.variants.map(v => v.price)) 
+          : a.price || 0;
+        const priceB = b.variants && b.variants.length > 0 
+          ? Math.min(...b.variants.map(v => v.price)) 
+          : b.price || 0;
+        return priceB - priceA;
+      });
+    }
+
+    setFilteredProducts(filtered);
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -33,27 +183,7 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
         .flatMap(cat => cat.subcategories)
         .find(sub => sub._id === selectedSubcategory)?.products || [];
 
-      const properties = {};
-      products.forEach(product => {
-        if (product.properties) {
-          Object.entries(product.properties).forEach(([key, value]) => {
-            if (!properties[key]) {
-              properties[key] = new Set();
-            }
-            if (Array.isArray(value)) {
-              value.forEach(v => properties[key].add(v));
-            } else {
-              properties[key].add(value);
-            }
-          });
-        }
-      });
-
-      Object.keys(properties).forEach(key => {
-        properties[key] = Array.from(properties[key]);
-      });
-
-      setAllProperties(properties);
+      updateAvailableProperties(products);
       applyFilters(products);
     }
   }, [selectedSubcategory, currentFilters, categoriesWithSubcategories]);
@@ -77,6 +207,7 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
     });
   };
 
+  // دالة معالجة تغيير الفلاتر
   const handleFilterChange = (name, value) => {
     setCurrentFilters(prev => {
       if (name.startsWith('property_')) {
@@ -96,35 +227,6 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
       }
       return { ...prev, [name]: value };
     });
-  };
-
-
-  const applyFilters = (products) => {
-    let filtered = products.filter(product => {
-      if (currentFilters.minPrice !== '' && product.price < Number(currentFilters.minPrice)) return false;
-      if (currentFilters.maxPrice !== '' && product.price > Number(currentFilters.maxPrice)) return false;
-
-      for (const [key, values] of Object.entries(currentFilters.properties)) {
-        if (values.length > 0) {
-          if (!product.properties || !product.properties[key] ||
-            (Array.isArray(product.properties[key])
-              ? !product.properties[key].some(v => values.includes(v))
-              : !values.includes(product.properties[key]))) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    });
-
-    if (currentFilters.sortOrder === 'asc') {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (currentFilters.sortOrder === 'desc') {
-      filtered.sort((a, b) => b.price - a.price);
-    }
-
-    setFilteredProducts(filtered);
   };
 
   const toggleSection = (sectionName) => {
@@ -206,11 +308,11 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
             </AnimatePresence>
           ))
         ) : selectedSubcategory ? (
-          <div >
+          <div>
             <div className="flex justify-between items-center mb-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center"
+                className="bg-black text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition flex items-center"
               >
                 <FaFilter className="ml-2" />
                 {showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}
@@ -248,21 +350,21 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
                     </FilterSection>
 
                     <FilterSection
-                      title="ترتيب السعر"
+                      title="ترتيب حسب"
                       name="sortOrder"
                       isOpen={openSections['sortOrder']}
                       toggleSection={toggleSection}
                     >
                       <div className="space-y-2">
                         <RadioButton
-                          label=" من الارخص إلى الأغلى"
+                          label="الأرخص"
                           name="sortOrder"
                           value="asc"
                           checked={currentFilters.sortOrder === 'asc'}
                           onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
                         />
                         <RadioButton
-                          label=" من الأغلى إلى الارخص"
+                          label="الأغلى"
                           name="sortOrder"
                           value="desc"
                           checked={currentFilters.sortOrder === 'desc'}
@@ -271,7 +373,7 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
                       </div>
                     </FilterSection>
 
-                    {Object.entries(allProperties).map(([propertyName, values]) => (
+                    {Object.entries(availableProperties).map(([propertyName, values]) => (
                       <FilterSection
                         key={propertyName}
                         title={propertyName}
@@ -291,6 +393,13 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
                         </div>
                       </FilterSection>
                     ))}
+
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="mt-4 w-full bg-black text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition"
+                    >
+                      إخفاء الفلاتر
+                    </button>
                   </div>
                 </div>
               )}
@@ -315,7 +424,7 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
                   properties: {},
                 });
               }}
-              className="mt-8 w-full py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-full font-semibold transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              className="mt-8 w-full py-3 bg-black text-white rounded-full font-semibold transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
               العودة إلى الفئات
             </button>
@@ -329,49 +438,52 @@ export default function Categories({ categoriesWithSubcategories = [] }) {
 }
 
 const FilterSection = ({ title, name, isOpen, toggleSection, children }) => (
-  <div className="mb-4 border-b border-gray-200 pb-4">
-    <div
-      className="flex justify-between items-center cursor-pointer"
+  <div className="mb-4">
+    <button
       onClick={() => toggleSection(name)}
+      className="flex justify-between items-center w-full text-right font-semibold mb-2"
     >
-      <h4 className="text-lg font-medium text-gray-700">{title}</h4>
+      {title}
       {isOpen ? <FaChevronUp /> : <FaChevronDown />}
-    </div>
-    {isOpen && <div className="mt-3">{children}</div>}
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 );
 
 const RadioButton = ({ label, name, value, checked, onChange }) => (
-  <label className="flex items-center gap-4 cursor-pointer mb-2">
+  <label className="flex items-center gap-1 space-x-2">
     <input
       type="radio"
-      className="form-radio text-blue-600 w-5 h-5"
       name={name}
       value={value}
       checked={checked}
-      onClick={(e) => {
-        if (checked) {
-          e.preventDefault();
-          onChange({ target: { name, value: '' } });
-        }
-      }}
       onChange={onChange}
+      className="form-radio text-blue-600"
     />
-    <span className="text-gray-700 text-lg">{label}</span>
+    <span className="text-lg">{label}</span>
   </label>
 );
 
-
-
 const Checkbox = ({ label, checked, onChange }) => (
-  <label className="flex items-center gap-2 space-x-3 cursor-pointer">
+  <label className="flex items-center gap-1 space-x-2">
     <input
       type="checkbox"
-      className="form-checkbox text-blue-600"
       checked={checked}
       onChange={onChange}
+      className="form-checkbox text-blue-600"
     />
-    <span className="text-gray-700">{label}</span>
+    <span className="text-base">{label}</span>
   </label>
 );
 

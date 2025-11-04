@@ -107,9 +107,6 @@ const SuccessfulPayment = () => {
                     <h1 className='font-semibold text-xl text-green-1 bg-green-600 p-3 mt-9 rounded-lg'>
                         دفع ناجح
                     </h1>
-                    <p className='font-extrabold text-5xl text-black'>فلسطين حرة</p>
-                    <p className='font-extrabold text-5xl text-red-700'>فلسطين حرة</p>
-                    <p className='font-extrabold text-5xl text-green-700'>فلسطين حرة</p>
                     <p className='text-lg text-center font-semibold text-black'>
                         سنتواصل بك عند ارسال الطلب
                     </p>
