@@ -1,11 +1,8 @@
 import multiparty from "multiparty";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import fs from "fs";
-import mime from "mime-types";
+import ImageKit from "imagekit";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
-
-const bucketName = 'hetari-clothes';
 
 export default async function handle(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -21,12 +18,11 @@ export default async function handle(req, res) {
     });
   });
 
-  const client = new S3Client({
-    region: 'us-east-2',
-    credentials: {
-      accessKeyId: process.env.S3_ACCESS_KEY,
-      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-    },
+  // Initialize ImageKit
+  const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
   });
 
   const Links = [];
@@ -34,21 +30,18 @@ export default async function handle(req, res) {
     const ext = file.originalFilename.split('.').pop();
     const newFilename = `${Date.now()}.${ext}`;
     const fileContent = fs.readFileSync(file.path);
-    const mimeType = mime.lookup(file.path) || 'application/octet-stream';
 
     try {
-      await client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: newFilename,
-        Body: fileContent,
-        ACL: 'public-read',
-        ContentType: mimeType,
-      }));
+      // Upload to ImageKit
+      const response = await imagekit.upload({
+        file: fileContent, // يمكن أن يكون Buffer أو base64 string
+        fileName: newFilename,
+        folder: "/hetari-clothes" // مجلد اختياري لتنظيم الصور
+      });
 
-      const Link = `https://${bucketName}.s3.amazonaws.com/${newFilename}`;
-      Links.push(Link);
+      Links.push(response.url);
     } catch (error) {
-      console.error("Error uploading to S3:", error);
+      console.error("Error uploading to ImageKit:", error);
       return res.status(500).json({ error: "Error uploading file" });
     }
   }

@@ -5,14 +5,14 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'hetari-clothes.s3.amazonaws.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
+        hostname: 'ik.imagekit.io',
+        port: '',
+        pathname: '/**',
       },
     ],
+    loader: 'custom',
+    loaderFile: './imagekit-loader.mjs',
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
