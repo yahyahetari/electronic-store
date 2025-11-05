@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import ProductsList from "@/components/ProductsList";
 import { connectToDB } from "@/lib/mongoose";
 import { Product } from "@/models/Products";
@@ -35,8 +35,10 @@ export async function getServerSideProps({ params }) {
   const uniqueProducts = Array.from(new Set(allProducts.map(p => p._id.toString())))
     .map(_id => allProducts.find(p => p._id.toString() === _id));
 
+  // Get unique category IDs from search results
   const productCategoryIds = new Set(uniqueProducts.map(product => product.category.toString()));
 
+  // Fetch only relevant categories
   const relevantCategories = await Category.find({
     _id: { $in: Array.from(productCategoryIds) }
   });
@@ -65,7 +67,7 @@ export default function SearchPage({ searchedProducts, query, categories }) {
   const [availableProperties, setAvailableProperties] = useState({});
 
   // دالة لتحديث الخصائص المتاحة مع ترتيب ذكي
-  const updateAvailableProperties = useCallback((products) => {
+  const updateAvailableProperties = (products) => {
     const properties = {};
     
     products.forEach(product => {
@@ -129,10 +131,10 @@ export default function SearchPage({ searchedProducts, query, categories }) {
     });
 
     setAvailableProperties(formattedProperties);
-  }, []);
+  };
 
   // دالة تطبيق الفلاتر المحسنة
-  const applyFilters = useCallback((products, filters) => {
+  const applyFilters = (products) => {
     if (!products) return;
     
     let filtered = [...products].filter(product => {
@@ -145,16 +147,16 @@ export default function SearchPage({ searchedProducts, query, categories }) {
         productPrice = product.price || 0;
       }
       
-      if (filters.minPrice !== '' && productPrice < Number(filters.minPrice)) return false;
-      if (filters.maxPrice !== '' && productPrice > Number(filters.maxPrice)) return false;
+      if (currentFilters.minPrice !== '' && productPrice < Number(currentFilters.minPrice)) return false;
+      if (currentFilters.maxPrice !== '' && productPrice > Number(currentFilters.maxPrice)) return false;
 
       // فلترة الفئات
-      if (filters.categories.length > 0) {
-        if (!filters.categories.includes(product.category.toString())) return false;
+      if (currentFilters.categories.length > 0) {
+        if (!currentFilters.categories.includes(product.category.toString())) return false;
       }
 
       // فلترة الخصائص المحسنة
-      for (const [key, values] of Object.entries(filters.properties)) {
+      for (const [key, values] of Object.entries(currentFilters.properties)) {
         if (values.length > 0) {
           let hasMatchingProperty = false;
           
@@ -183,7 +185,7 @@ export default function SearchPage({ searchedProducts, query, categories }) {
     });
 
     // الترتيب
-    if (filters.sortOrder === 'asc') {
+    if (currentFilters.sortOrder === 'asc') {
       filtered.sort((a, b) => {
         const priceA = a.variants && a.variants.length > 0 
           ? Math.min(...a.variants.map(v => v.price)) 
@@ -193,7 +195,7 @@ export default function SearchPage({ searchedProducts, query, categories }) {
           : b.price || 0;
         return priceA - priceB;
       });
-    } else if (filters.sortOrder === 'desc') {
+    } else if (currentFilters.sortOrder === 'desc') {
       filtered.sort((a, b) => {
         const priceA = a.variants && a.variants.length > 0 
           ? Math.min(...a.variants.map(v => v.price)) 
@@ -206,25 +208,21 @@ export default function SearchPage({ searchedProducts, query, categories }) {
     }
 
     setFilteredProducts(filtered);
-  }, []);
+  };
 
-  // تحميل أولي عند تغيير searchedProducts
   useEffect(() => {
     if (searchedProducts && searchedProducts.length > 0) {
       updateAvailableProperties(searchedProducts);
-      applyFilters(searchedProducts, currentFilters);
+      applyFilters(searchedProducts);
     } else {
       setFilteredProducts([]);
     }
     setLoading(false);
-  }, [searchedProducts, updateAvailableProperties, applyFilters, currentFilters]);
+  }, [searchedProducts]);
 
-  // تطبيق الفلاتر عند تغيير currentFilters
   useEffect(() => {
-    if (searchedProducts) {
-      applyFilters(searchedProducts, currentFilters);
-    }
-  }, [currentFilters, searchedProducts, applyFilters]);
+    applyFilters(searchedProducts);
+  }, [currentFilters]);
 
   const handleFilterChange = (name, value) => {
     setCurrentFilters(prev => {
@@ -279,7 +277,7 @@ export default function SearchPage({ searchedProducts, query, categories }) {
           className="flex items-center justify-between mb-6"
         >
           <h1 className="text-3xl font-bold text-gray-800">
-            نتائج البحث عن "{query}"
+          نتائج البحث عن &ldquo;{query}&rdquo;
           </h1>
           <motion.button
             whileHover={{ scale: 1.05 }}
