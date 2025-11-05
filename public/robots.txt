@@ -1,3 +1,9 @@
+# *
 User-agent: *
 Allow: /
+
+# Host
+Host: https://hetari.shop
+
+# Sitemaps
 Sitemap: https://hetari.shop/sitemap.xml
