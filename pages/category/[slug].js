@@ -208,7 +208,7 @@ export default function SearchPage({ searchedProducts, query, categories }) {
     setFilteredProducts(filtered);
   }, []);
 
-  // تحميل أولي
+  // تحميل أولي - يعمل مرة واحدة فقط عند تحميل الصفحة
   useEffect(() => {
     if (searchedProducts && searchedProducts.length > 0) {
       updateAvailableProperties(searchedProducts);
@@ -217,11 +217,14 @@ export default function SearchPage({ searchedProducts, query, categories }) {
       setFilteredProducts([]);
     }
     setLoading(false);
-  }, [searchedProducts, updateAvailableProperties, applyFilters, currentFilters]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchedProducts]);
 
-  // تطبيق الفلاتر عند تغييرها
+  // تطبيق الفلاتر عند تغييرها فقط
   useEffect(() => {
-    applyFilters(searchedProducts, currentFilters);
+    if (searchedProducts) {
+      applyFilters(searchedProducts, currentFilters);
+    }
   }, [currentFilters, searchedProducts, applyFilters]);
 
   const handleFilterChange = (name, value) => {
@@ -277,7 +280,7 @@ export default function SearchPage({ searchedProducts, query, categories }) {
           className="flex items-center justify-between mb-6"
         >
           <h1 className="text-3xl font-bold text-gray-800">
-            نتائج البحث عن "{query}"
+            نتائج البحث عن &quot;{query}&quot;
           </h1>
           <motion.button
             whileHover={{ scale: 1.05 }}
