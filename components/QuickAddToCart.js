@@ -38,6 +38,7 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
     const [quantity, setQuantity] = useState(1);
     const [mainImage, setMainImage] = useState(product.images[0]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isAdding, setIsAdding] = useState(false);
 
     useEffect(() => {
         if (product.variants[0]?.properties) {
@@ -125,7 +126,7 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
     };
 
     const increaseQuantity = () => {
-        if (selectedVariant && quantity < selectedVariant.stock) {
+        if (selectedVariant && selectedVariant.stock > 0 && quantity < selectedVariant.stock) {
             setQuantity(prev => prev + 1);
         }
     };
@@ -134,16 +135,25 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
         setQuantity(prev => (prev > 1 ? prev - 1 : 1));
     };
 
-    const handleAddToCart = () => {
-        if (selectedVariant) {
-            addToCart({
+    const handleAddToCart = async () => {
+        if (isAdding) return; // منع الضغط المتعدد
+        
+        if (selectedVariant && selectedVariant.stock > 0) {
+            setIsAdding(true);
+            
+            await addToCart({
                 productId: product._id,
                 variantId: selectedVariant._id,
                 properties: selectedProperties,
                 quantity,
-                price: selectedVariant.price
+                price: selectedVariant.price,
+                stock: selectedVariant.stock
             });
-
+            
+            // تأخير بسيط قبل السماح بالضغط مرة أخرى
+            setTimeout(() => {
+                setIsAdding(false);
+            }, 500);
         }
     };
 
@@ -301,12 +311,12 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
 
                         <div className="flex items-center justify-center mt-6">
                             <MinusCircle
-                                className="hover:text-red-700 cursor-pointer"
+                                className={`cursor-pointer ${quantity > 1 ? 'hover:text-red-700' : 'opacity-50 cursor-not-allowed'}`}
                                 onClick={decreaseQuantity}
                             />
                             <span className="text-lg font-medium mx-3">{quantity}</span>
                             <PlusCircle
-                                className="hover:text-red-700 cursor-pointer"
+                                className={`cursor-pointer ${selectedVariant && quantity < selectedVariant.stock ? 'hover:text-red-700' : 'opacity-50 cursor-not-allowed'}`}
                                 onClick={increaseQuantity}
                             />
                         </div>
@@ -314,11 +324,11 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
                         <div className="flex justify-center w-full mt-4">
                             <button
                                 onClick={handleAddToCart}
-                                disabled={!selectedVariant || selectedVariant.stock < 1}
-                                className={`font-medium text-xl text-white rounded-lg py-2 w-3/4 flex items-center justify-center ${!selectedVariant || selectedVariant.stock < 1 ? 'bg-gray-400 cursor-not-allowed' : 'bg-black'}`}
+                                disabled={!selectedVariant || selectedVariant.stock < 1 || isAdding}
+                                className={`font-medium text-xl text-white rounded-lg py-2 w-3/4 flex items-center justify-center ${!selectedVariant || selectedVariant.stock < 1 || isAdding ? 'bg-gray-400 cursor-not-allowed' : 'bg-black'}`}
                             >
                                 <span className="hidden sm:inline">
-                                    {!selectedVariant ? 'اختر مواصفات متاحة' : selectedVariant.stock < 1 ? 'نفذت الكمية' : 'إضافة إلى السلة'}
+                                    {isAdding ? 'جاري الإضافة...' : !selectedVariant ? 'اختر مواصفات متاحة' : selectedVariant.stock < 1 ? 'نفذت الكمية' : 'إضافة إلى السلة'}
                                 </span>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"

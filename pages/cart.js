@@ -15,7 +15,7 @@ export default function Cart() {
     const { cart, setCart } = useContext(CartContext);
     const [products, setProducts] = useState([]);
     const [productToDelete, setProductToDelete] = useState(null);
-    const [loading, setLoading] = useState(true); // حالة الـ Loader
+    const [loading, setLoading] = useState(true);
     const [loadingProducts, setLoadingProducts] = useState({});
     const [prevTotals, setPrevTotals] = useState({});
 
@@ -41,7 +41,6 @@ export default function Cart() {
                 const groupedProducts = groupProductsByProperties(response.data);
                 setProducts(groupedProducts);
 
-                // تأخير إخفاء الـ Loader لمدة 3 ثوانٍ
                 setTimeout(() => {
                     setLoading(false);
                 }, 3000);
@@ -49,7 +48,6 @@ export default function Cart() {
         } else {
             setProducts([]);
 
-            // تأخير إخفاء الـ Loader لمدة 3 ثوانٍ حتى لو كانت السلة فارغة
             setTimeout(() => {
                 setLoading(false);
             }, 3000);
@@ -76,6 +74,7 @@ export default function Cart() {
                         variantId: cartItem.variantId,
                         properties: cartItem.properties,
                         price: cartItem.price,
+                        stock: cartItem.stock,
                         quantity: 1
                     });
                 }
@@ -86,95 +85,115 @@ export default function Cart() {
     }, [cart]);
 
     const increaseQuantity = useCallback((id, properties) => {
-        const targetProduct = products.find(p => 
-            p._id === id && 
-            JSON.stringify(p.properties) === JSON.stringify(properties)
-        );
-        
-        if (targetProduct) {
-            const variant = targetProduct.variants.find(v => v._id === targetProduct.variantId);
+        setCart(currentCart => {
+            const targetProduct = products.find(p => 
+                p._id === id && 
+                JSON.stringify(p.properties) === JSON.stringify(properties)
+            );
             
-            if (!variant || typeof variant.stock !== 'number') {
-                toast.error('عذراً، حدث خطأ في التحقق من المخزون');
-                return;
+            if (targetProduct) {
+                const variant = targetProduct.variants.find(v => v._id === targetProduct.variantId);
+                
+                if (!variant || typeof variant.stock !== 'number') {
+                    toast.error('عذراً، حدث خطأ في التحقق من المخزون');
+                    return currentCart;
+                }
+
+                // حساب الكمية الحالية في السلة
+                const currentQuantityInCart = currentCart.filter(item => 
+                    item.id === id && 
+                    JSON.stringify(item.properties) === JSON.stringify(properties)
+                ).length;
+
+                if (currentQuantityInCart >= variant.stock) {
+                    toast.error('عذراً، لا يمكن إضافة المزيد من هذا المنتج');
+                    return currentCart;
+                }
+
+                const updatedCart = [...currentCart, { 
+                    id, 
+                    properties,
+                    price: targetProduct.price,
+                    variantId: targetProduct.variantId,
+                    stock: variant.stock
+                }];
+                
+                const newTotal = targetProduct.price * (currentQuantityInCart + 1);
+                setPrevTotals(prev => ({
+                    ...prev,
+                    [`${id}-${JSON.stringify(properties)}`]: newTotal
+                }));
+                
+                updateLocalStorage(updatedCart);
+                return updatedCart;
             }
-    
-            if (targetProduct.quantity >= variant.stock) {
-                toast.error('عذراً، لا يمكن إضافة المزيد من هذا المنتج');
-                return;
-            }
-    
-            const updatedCart = [...cart];
-            updatedCart.push({ 
-                id, 
-                properties,
-                price: targetProduct.price,
-                variantId: targetProduct.variantId
-            });
             
-            const newTotal = targetProduct.price * (targetProduct.quantity + 1);
-            setPrevTotals(prev => ({
-                ...prev,
-                [`${id}-${JSON.stringify(properties)}`]: newTotal
-            }));
-            
-            setCart(updatedCart);
-            updateLocalStorage(updatedCart);
-        }
-    }, [cart, products, setCart]);
+            return currentCart;
+        });
+    }, [products]);
 
     const decreaseQuantity = useCallback((id, properties) => {
         const productKey = `${id}-${JSON.stringify(properties)}`;
         setLoadingProducts(prev => ({ ...prev, [productKey]: true }));
     
-        const targetProduct = products.find(p => 
-            p._id === id && 
-            JSON.stringify(p.properties) === JSON.stringify(properties)
-        );
-        
-        if (targetProduct) {
-            const productCount = cart.filter(item => 
-                item.id === id && 
-                JSON.stringify(item.properties) === JSON.stringify(properties)
-            ).length;
+        setCart(currentCart => {
+            const targetProduct = products.find(p => 
+                p._id === id && 
+                JSON.stringify(p.properties) === JSON.stringify(properties)
+            );
             
-            if (productCount > 1) {
-                const productIndices = cart.reduce((indices, item, index) => {
-                    if (item.id === id && JSON.stringify(item.properties) === JSON.stringify(properties)) {
-                        indices.push(index);
-                    }
-                    return indices;
-                }, []);
+            if (targetProduct) {
+                const productCount = currentCart.filter(item => 
+                    item.id === id && 
+                    JSON.stringify(item.properties) === JSON.stringify(properties)
+                ).length;
                 
-                const updatedCart = [...cart];
-                updatedCart.splice(productIndices[productIndices.length - 1], 1);
-                
-                const newTotal = targetProduct.price * (productCount - 1);
-                setPrevTotals(prev => ({
-                    ...prev,
-                    [productKey]: newTotal
-                }));
-                
-                setCart(updatedCart);
-                updateLocalStorage(updatedCart);
-            } else {
-                setProductToDelete(targetProduct);  // Now passing the full product object
+                if (productCount > 1) {
+                    const productIndices = currentCart.reduce((indices, item, index) => {
+                        if (item.id === id && JSON.stringify(item.properties) === JSON.stringify(properties)) {
+                            indices.push(index);
+                        }
+                        return indices;
+                    }, []);
+                    
+                    const updatedCart = [...currentCart];
+                    updatedCart.splice(productIndices[productIndices.length - 1], 1);
+                    
+                    const newTotal = targetProduct.price * (productCount - 1);
+                    setPrevTotals(prev => ({
+                        ...prev,
+                        [productKey]: newTotal
+                    }));
+                    
+                    updateLocalStorage(updatedCart);
+                    return updatedCart;
+                } else {
+                    setProductToDelete(targetProduct);
+                    return currentCart;
+                }
             }
-        }
+            
+            return currentCart;
+        });
     
         setTimeout(() => {
             setLoadingProducts(prev => ({ ...prev, [productKey]: false }));
         }, 1000);
-    }, [cart, products, setCart]);
+    }, [products]);
 
     const confirmDeleteProduct = useCallback(() => {
         if (productToDelete) {
-            const updatedCart = cart.filter(item => !(item.id === productToDelete._id && JSON.stringify(item.properties) === JSON.stringify(productToDelete.properties)));
-            setCart(updatedCart);
-            updateLocalStorage(updatedCart);
+            setCart(currentCart => {
+                const updatedCart = currentCart.filter(item => 
+                    !(item.id === productToDelete._id && 
+                      JSON.stringify(item.properties) === JSON.stringify(productToDelete.properties))
+                );
+                updateLocalStorage(updatedCart);
+                return updatedCart;
+            });
             setProductToDelete(null);
         }
-    }, [cart, productToDelete, setCart]);
+    }, [productToDelete]);
 
     const cancelDelete = useCallback(() => {
         setProductToDelete(null);
@@ -190,7 +209,6 @@ export default function Cart() {
         router.push('/checkout');
     }, [router]);
 
-    // إظهار الـ Loader لمدة 3 ثوانٍ
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">

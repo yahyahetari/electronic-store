@@ -25,42 +25,50 @@ export function CartContextProvider({ children }) {
     function addToCart(item) {
         const { productId, variantId, properties, quantity, price, stock } = item;
         
-        // تجميع كل المنتجات المتطابقة في السلة
-        const matchingItems = cart.filter(cartItem => 
-            cartItem.variantId === variantId && 
-            JSON.stringify(cartItem.properties) === JSON.stringify(properties)
-        );
+        // استخدام functional update للحصول على أحدث قيمة للـ cart
+        setCart(currentCart => {
+            // تجميع كل المنتجات المتطابقة في السلة الحالية
+            const matchingItems = currentCart.filter(cartItem => 
+                cartItem.variantId === variantId && 
+                JSON.stringify(cartItem.properties) === JSON.stringify(properties)
+            );
 
-        const totalQuantityInCart = matchingItems.length;
-        const totalRequestedQuantity = totalQuantityInCart + quantity;
+            const totalQuantityInCart = matchingItems.length;
+            const totalRequestedQuantity = totalQuantityInCart + quantity;
 
-        // فحص المخزون المتاح
-        if (totalRequestedQuantity > stock) {
-            const remainingStock = stock - totalQuantityInCart;
-            
-            if (remainingStock <= 0) {
-                toast.error('نفذت الكمية من المخزون');
-                return;
+            // فحص المخزون المتاح
+            if (totalRequestedQuantity > stock) {
+                const remainingStock = stock - totalQuantityInCart;
+                
+                if (remainingStock <= 0) {
+                    toast.error('نفذت الكمية من المخزون');
+                    return currentCart; // إرجاع السلة بدون تغيير
+                }
+                
+                toast.error(`الكمية المتوفرة في المخزون ${remainingStock} ${remainingStock === 1 ? 'قطعة' : 'قطع'} فقط`);
+                return currentCart; // إرجاع السلة بدون تغيير
             }
+
+            // إضافة المنتجات الجديدة
+            const newItems = Array(quantity).fill({
+                id: productId,
+                variantId,
+                properties,
+                price,
+                stock
+            });
+
+            const updatedCart = [...currentCart, ...newItems];
             
-            toast.error(`الكمية المتوفرة في المخزون ${remainingStock} ${remainingStock === 1 ? 'قطعة' : 'قطع'} فقط`);
-            return;
-        }
+            // تحديث localStorage
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('cart', JSON.stringify(updatedCart));
+            }
 
-        // إضافة المنتجات الجديدة
-        const newItems = Array(quantity).fill({
-            id: productId,
-            variantId,
-            properties,
-            price,
-            stock
+            toast.success(`تمت إضافة ${quantity} ${quantity > 1 ? 'منتجات' : 'منتج'} إلى السلة`);
+            
+            return updatedCart;
         });
-
-        const updatedCart = [...cart, ...newItems];
-        setCart(updatedCart);
-        ls?.setItem('cart', JSON.stringify(updatedCart));
-        
-        toast.success(`تمت إضافة ${quantity} ${quantity > 1 ? 'منتجات' : 'منتج'} إلى السلة`);
     }
 
     function clearCart() {
