@@ -26,9 +26,10 @@ const OrderSchema = new Schema({
     shippingCost: { type: Number, default: 20 },
     paid: { type: Boolean, default: false },
     paymentId: String,
+    viewed: { type: Boolean, default: false },
     status: { 
         type: String, 
-        enum: ['pending', 'processing', 'shipped', 'delivered'], 
+        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], 
         default: 'pending' 
     }
 }, {
