@@ -42,44 +42,47 @@ export default function Auth({ onClose }) {
     }));
   };
 
+  // دالة واحدة فقط للتحقق من وجود المستخدم
   const checkUserExists = async (email) => {
     try {
-      console.log('🔍 Checking if user exists:', email);
-      const response = await fetch(`/api/check-user-exists?email=${encodeURIComponent(email)}`, {
+      console.log('🔍 [Regular] Checking if user exists:', email);
+      const response = await fetch(`/api/user-verification-status?email=${encodeURIComponent(email.toLowerCase().trim())}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
-      console.log('📡 Response status:', response.status);
+      console.log('📡 [Regular] Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ User exists data:', data);
+        console.log('✅ [Regular] User data:', data);
         return data.exists === true;
       }
-      console.log('⚠️ Response not ok');
+      console.log('⚠️ [Regular] Response not ok');
       return false;
     } catch (error) {
-      console.error('❌ Error checking user existence:', error);
+      console.error('❌ [Regular] Error checking user existence:', error);
       return false;
     }
   };
 
+  // دالة واحدة فقط للتحقق من حالة التفعيل
   const checkUserVerificationStatus = async (email) => {
     try {
-      console.log('🔍 Checking verification for:', email);
-      const response = await fetch(`/api/user-verification-status?email=${encodeURIComponent(email)}`, {
+      console.log('🔍 [Regular] Checking verification for:', email);
+      const response = await fetch(`/api/user-verification-status?email=${encodeURIComponent(email.toLowerCase().trim())}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
-      console.log('📡 Response status:', response.status);
+      console.log('📡 [Regular] Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ User data:', data);
+        console.log('✅ [Regular] User verification data:', data);
+        // التأكد من أن isVerified هو true بالضبط
         return data.isVerified === true;
       }
-      console.log('⚠️ Response not ok');
+      console.log('⚠️ [Regular] Response not ok');
       return false;
     } catch (error) {
-      console.error('❌ Error checking verification:', error);
+      console.error('❌ [Regular] Error checking verification:', error);
       return false;
     }
   };
@@ -87,6 +90,7 @@ export default function Auth({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
     try {
       if (activeTab === 'signup') {
         const response = await fetch('/api/auth/signup', {
@@ -94,18 +98,19 @@ export default function Auth({ onClose }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: formData.signup_full_name,
-            email: formData.signup_email,
+            email: formData.signup_email.toLowerCase().trim(),
             password: formData.signup_password
           })
         });
         
         if (response.ok) {
+          console.log('✅ Signup successful, sending verification code...');
           const code = Math.floor(100000 + Math.random() * 900000).toString();
           setVerificationCode(code);
           await fetch('/api/send-verification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: formData.signup_email, code })
+            body: JSON.stringify({ email: formData.signup_email.toLowerCase().trim(), code })
           });
           setShowVerification(true);
         } else {
@@ -123,7 +128,7 @@ export default function Auth({ onClose }) {
               const sendResponse = await fetch('/api/send-verification', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: formData.signup_email, code })
+                body: JSON.stringify({ email: formData.signup_email.toLowerCase().trim(), code })
               });
               if (sendResponse.ok) {
                 setError('');
@@ -144,62 +149,79 @@ export default function Auth({ onClose }) {
           }
         }
       } else {
-        console.log('🔐 Attempting login for:', formData.login_email);
+        // === تسجيل الدخول ===
+        const loginEmail = formData.login_email.toLowerCase().trim();
+        console.log('🔐 [Regular] Attempting login for:', loginEmail);
         
-        // التحقق من وجود المستخدم أولاً
-        const userExists = await checkUserExists(formData.login_email);
-        console.log('👤 Does user exist?', userExists);
+        // الخطوة 1: التحقق من وجود المستخدم
+        const userExists = await checkUserExists(loginEmail);
+        console.log('👤 [Regular] Does user exist?', userExists);
         
         if (!userExists) {
           // المستخدم غير موجود - تحويله لفورم التسجيل
-          console.log('⚠️ User does not exist, redirecting to signup...');
+          console.log('⚠️ [Regular] User does not exist, redirecting to signup...');
           setError('هذا البريد الإلكتروني غير مسجل. يرجى إنشاء حساب جديد');
           setActiveTab('signup');
-          // نسخ البريد الإلكتروني إلى فورم التسجيل
           setFormData(prev => ({
             ...prev,
-            signup_email: formData.login_email
+            signup_email: loginEmail
           }));
           return;
         }
         
-        // المستخدم موجود - التحقق من حالة التحقق
-        const isUserVerified = await checkUserVerificationStatus(formData.login_email);
-        console.log('✓ Is user verified?', isUserVerified);
+        // الخطوة 2: التحقق من حالة التفعيل قبل تسجيل الدخول
+        const isAlreadyVerified = await checkUserVerificationStatus(loginEmail);
+        console.log('✓ [Regular] Is user verified?', isAlreadyVerified);
         
-        if (isUserVerified) {
-          console.log('✅ User is verified, logging in...');
-          const result = await signIn("credentials", {
-            redirect: false,
-            email: formData.login_email,
-            password: formData.login_password
-          });
-          console.log('📝 Login result:', result);
-          if (result?.ok) {
-            console.log('🎉 Login successful!');
+        // الخطوة 3: محاولة تسجيل الدخول
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: loginEmail,
+          password: formData.login_password
+        });
+        
+        console.log('📝 [Regular] Login result:', { ok: result?.ok, error: result?.error });
+        
+        if (result?.ok) {
+          console.log('🎉 [Regular] Login successful!');
+          
+          // إذا كان المستخدم محقق، ادخل مباشرة
+          if (isAlreadyVerified) {
+            console.log('✅ [Regular] User is verified, closing modal...');
             onClose();
-          } else {
-            console.log('❌ Login failed:', result?.error);
-            setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+            return;
           }
-        } else {
-          console.log('⚠️ User not verified, sending code...');
+          
+          // إذا لم يكن محقق، أرسل كود التحقق
+          console.log('📧 [Regular] User not verified, sending verification code...');
           const code = Math.floor(100000 + Math.random() * 900000).toString();
           setVerificationCode(code);
-          const sendResponse = await fetch('/api/send-verification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: formData.login_email, code })
-          });
-          if (sendResponse.ok) {
-            setShowVerification(true);
-          } else {
+          
+          try {
+            const sendResponse = await fetch('/api/send-verification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: loginEmail, code })
+            });
+            
+            if (sendResponse.ok) {
+              console.log('✅ [Regular] Verification code sent');
+              setShowVerification(true);
+            } else {
+              console.error('❌ [Regular] Failed to send verification code');
+              setError('فشل إرسال رمز التحقق');
+            }
+          } catch (sendError) {
+            console.error('❌ [Regular] Error sending verification:', sendError);
             setError('فشل إرسال رمز التحقق');
           }
+        } else {
+          console.log('❌ [Regular] Login failed');
+          setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
         }
       }
     } catch (error) {
-      console.error('❌ Submit error:', error);
+      console.error('❌ [Regular] Submit error:', error);
       setError('حدث خطأ، يرجى المحاولة مرة أخرى');
     }
   };
@@ -210,31 +232,39 @@ export default function Auth({ onClose }) {
       return;
     }
     setError('');
+    
     try {
-      const emailToVerify = activeTab === 'signup' ? formData.signup_email : formData.login_email;
+      const emailToVerify = (activeTab === 'signup' ? formData.signup_email : formData.login_email).toLowerCase().trim();
       const passwordToUse = activeTab === 'signup' ? formData.signup_password : formData.login_password;
-      console.log('✓ Verifying user:', emailToVerify);
+      
+      console.log('✓ [Regular] Verifying user:', emailToVerify);
+      
       const verifyResponse = await fetch('/api/verify-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailToVerify })
       });
+      
       if (!verifyResponse.ok) {
         throw new Error('فشل التحقق من الحساب');
       }
-      console.log('✅ User verified, logging in...');
+      
+      console.log('✅ [Regular] User verified, logging in...');
+      
       const result = await signIn("credentials", {
         redirect: false,
         email: emailToVerify,
         password: passwordToUse
       });
+      
       if (result?.error) {
         setError('فشل تسجيل الدخول: ' + result.error);
       } else if (result?.ok) {
+        console.log('🎉 [Regular] Login successful after verification');
         onClose();
       }
     } catch (error) {
-      console.error('❌ Verification error:', error);
+      console.error('❌ [Regular] Verification error:', error);
       setError(error.message || 'فشل التحقق');
     }
   };
