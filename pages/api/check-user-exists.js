@@ -26,6 +26,7 @@ export default async function handler(req, res) {
 
     // إذا لم يوجد المستخدم
     if (!user) {
+      console.log('❌ [API] User not found, returning exists: false');
       return res.status(200).json({ 
         exists: false,
         isVerified: false 
@@ -33,9 +34,10 @@ export default async function handler(req, res) {
     }
 
     // إذا وجد المستخدم، أعد حالته
+    console.log('✅ [API] User found, returning exists: true');
     return res.status(200).json({ 
-      exists: true,
-      isVerified: user.isVerified === true, // تأكد من أنها boolean
+      exists: true,  // ✅ هذا هو الخط المهم!
+      isVerified: user.isVerified === true,
       email: user.email,
       name: user.name
     });

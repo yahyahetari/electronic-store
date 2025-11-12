@@ -42,41 +42,19 @@ export default function Auth({ onClose }) {
     }));
   };
 
-  // دالة واحدة فقط للتحقق من وجود المستخدم
-  const checkUserExists = async (email) => {
-    try {
-      console.log('🔍 [Regular] Checking if user exists:', email);
-      const response = await fetch(`/api/user-verification-status?email=${encodeURIComponent(email.toLowerCase().trim())}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      console.log('📡 [Regular] Response status:', response.status);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ [Regular] User data:', data);
-        return data.exists === true;
-      }
-      console.log('⚠️ [Regular] Response not ok');
-      return false;
-    } catch (error) {
-      console.error('❌ [Regular] Error checking user existence:', error);
-      return false;
-    }
-  };
-
-  // دالة واحدة فقط للتحقق من حالة التفعيل
+  // دالة للتحقق من حالة التفعيل
   const checkUserVerificationStatus = async (email) => {
     try {
       console.log('🔍 [Regular] Checking verification for:', email);
       const response = await fetch(`/api/user-verification-status?email=${encodeURIComponent(email.toLowerCase().trim())}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store' // ⚠️ منع الـ cache
       });
       console.log('📡 [Regular] Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
         console.log('✅ [Regular] User verification data:', data);
-        // التأكد من أن isVerified هو true بالضبط
         return data.isVerified === true;
       }
       console.log('⚠️ [Regular] Response not ok');
@@ -153,13 +131,30 @@ export default function Auth({ onClose }) {
         const loginEmail = formData.login_email.toLowerCase().trim();
         console.log('🔐 [Regular] Attempting login for:', loginEmail);
         
-        // الخطوة 1: التحقق من وجود المستخدم
-        const userExists = await checkUserExists(loginEmail);
-        console.log('👤 [Regular] Does user exist?', userExists);
+        // الخطوة 1: التحقق من وجود المستخدم والتحقق معاً
+        const checkResponse = await fetch(`/api/user-verification-status?email=${encodeURIComponent(loginEmail)}`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache' // ⚠️ منع الـ cache
+          },
+          cache: 'no-store' // ⚠️ منع الـ cache
+        });
+
+        if (!checkResponse.ok) {
+          console.error('❌ [Regular] Failed to check user status');
+          setError('حدث خطأ، يرجى المحاولة مرة أخرى');
+          return;
+        }
+
+        const userData = await checkResponse.json();
+        console.log('📊 [Regular] FULL User data:', JSON.stringify(userData, null, 2));
+        console.log('🔍 [Regular] userData.exists type:', typeof userData.exists);
+        console.log('🔍 [Regular] userData.exists value:', userData.exists);
         
-        if (!userExists) {
-          // المستخدم غير موجود - تحويله لفورم التسجيل
-          console.log('⚠️ [Regular] User does not exist, redirecting to signup...');
+        // ⚠️ تحقق صارم من وجود المستخدم
+        if (userData.exists !== true && !userData.email) {
+          console.log('⚠️ [Regular] User does not exist (exists is not true OR no email), redirecting to signup...');
           setError('هذا البريد الإلكتروني غير مسجل. يرجى إنشاء حساب جديد');
           setActiveTab('signup');
           setFormData(prev => ({
@@ -169,11 +164,9 @@ export default function Auth({ onClose }) {
           return;
         }
         
-        // الخطوة 2: التحقق من حالة التفعيل قبل تسجيل الدخول
-        const isAlreadyVerified = await checkUserVerificationStatus(loginEmail);
-        console.log('✓ [Regular] Is user verified?', isAlreadyVerified);
+        console.log('✓ [Regular] User exists, attempting login...');
         
-        // الخطوة 3: محاولة تسجيل الدخول
+        // الخطوة 2: محاولة تسجيل الدخول
         const result = await signIn("credentials", {
           redirect: false,
           email: loginEmail,
@@ -186,7 +179,7 @@ export default function Auth({ onClose }) {
           console.log('🎉 [Regular] Login successful!');
           
           // إذا كان المستخدم محقق، ادخل مباشرة
-          if (isAlreadyVerified) {
+          if (userData.isVerified === true) {
             console.log('✅ [Regular] User is verified, closing modal...');
             onClose();
             return;
