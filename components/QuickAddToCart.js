@@ -41,7 +41,8 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
     const [isAdding, setIsAdding] = useState(false);
 
     useEffect(() => {
-        if (product.variants[0]?.properties) {
+        // فقط عند تحميل المنتج لأول مرة
+        if (product.variants[0]?.properties && !selectedVariant) {
             const initialSelected = {};
             Object.entries(product.variants[0].properties).forEach(([key, values]) => {
                 if (Array.isArray(values) && values.length > 0) {
@@ -54,13 +55,16 @@ const QuickAddToCart = ({ product, onClose, ratings }) => {
                 setSelectedVariant(firstValidVariant);
             }
         }
-        setMainImage(product.images[0]);
+        
+        if (!mainImage) {
+            setMainImage(product.images[0]);
+        }
 
         const timer = setTimeout(() => {
             setIsLoading(false);
         }, 1000);
         return () => clearTimeout(timer);
-    }, [product]);
+    }, [product._id]); 
 
     const findMatchingVariant = (properties) => {
         return product.variants.find(variant => {
